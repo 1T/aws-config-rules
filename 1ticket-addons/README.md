@@ -11,7 +11,9 @@ All of the 1Ticket AWS resources must be created with the *app-name* tag.  We us
 * To determine the total cost associated with an application
 * To validate that a resource was created by us
 
-We are using AWS Config to verify that the resources we create are tagged with the tag *app-name*.  We're using the built in AWS Config rule [required-tags](https://docs.aws.amazon.com/config/latest/developerguide/required-tags.html) to check on the resources of type:
+## Rules to check for required tags
+
+We use AWS Config to verify that the resources we create are tagged with the tag *app-name*.  We're using the built in AWS Config rule [required-tags](https://docs.aws.amazon.com/config/latest/developerguide/required-tags.html) to check on the resources of type:
 
 * DynamoDB::Table
 * EC2::Instance
