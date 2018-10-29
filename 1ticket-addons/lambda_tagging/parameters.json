@@ -1,0 +1,11 @@
+{
+  "Version": "1.0",
+  "Parameters": {
+    "RuleName": "lambda_tagging",
+    "SourceRuntime": "python3.6",
+    "CodeKey": "lambda_tagging.zip",
+    "InputParameters": "{\"app-name\": \"*\"}",
+    "OptionalParameters": "{}",
+    "SourceEvents": "AWS::Lambda::Function"
+  }
+}
