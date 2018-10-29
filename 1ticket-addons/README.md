@@ -40,3 +40,7 @@ rdk -r dtiprod lambda-tagging
 ## Notifications
 
 Once the rules are enabled, when a resource of the types above are created or updated without the *app-name* tag, an email notification will be sent to the email list <TBD>
+  
+## Cost
+
+[AWS Config cost](https://aws.amazon.com/config/pricing/) is determined from the number of rules and the number of configuration items.  The cost associated with rules is about 4 rules x $2 = $8 per month.  The number of configuration items is determined from the number of changes to a resource type that AWS Config is monitoring.
