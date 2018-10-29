@@ -1,6 +1,10 @@
 # Evaluate our AWS Configuration 
 
+## AWS Config
+
 AWS Config is a service that enables you to assess, audit, and evaluate the configurations of your AWS resources. Config continuously monitors and records your AWS resource configurations and allows you to automate the evaluation of recorded configurations against desired configurations. With Config, you can review changes in configurations and relationships between AWS resources, dive into detailed resource configuration histories, and determine your overall compliance against the configurations specified in your internal guidelines. This enables you to simplify compliance auditing, security analysis, change management, and operational troubleshooting.
+
+## Installing Config rules
 
 All of the 1Ticket AWS resources must be created with the *app-name* tag.  We use that tag for the following purpposes:
 
@@ -32,3 +36,7 @@ In addition, we are using the [AWS Labs provided custom tagging rule](https://gi
 pip install rdk
 rdk -r dtiprod lambda-tagging
 ```
+
+## Notifications
+
+Once the rules are enabled, when a resource of the types above are created or updated without the *app-name* tag, an email notification will be sent to the email list <TBD>
