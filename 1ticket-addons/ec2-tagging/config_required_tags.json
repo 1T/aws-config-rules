@@ -1,0 +1,289 @@
+{
+  "Parameters": {
+    "ConfigRuleName": {
+      "Type": "String",
+      "Default": "required-tags",
+      "Description": "The name that you assign to the AWS Config rule.",
+      "MinLength": "1",
+      "ConstraintDescription": "This parameter is required."
+    },
+    "tag1Key": {
+      "Type": "String",
+      "Default": "app-name",
+      "Description": "The required tag name.",
+      "MinLength": "1",
+      "ConstraintDescription": "This parameter is required."
+    },
+    "tag1Value": {
+      "Type": "String",
+      "Default": "",
+      "Description": "Optional value of the required tag. Separate multiple values with commas."
+    },
+    "SNSTopic": {
+      "Description": "SNS topic to send notifications for errant bucket policies",
+      "Type": "String",
+      "Default": "ConfigTopic"
+    },
+    "EmailAddress": {
+      "Description": "Email Address for sending SNS notifications for Config Events",
+      "Type": "String",
+      "Default": "triet@1ticket.com"
+    },
+    "DeliveryChannelExists": {
+      "Type": "String",
+      "Description": "Do you have an existing AWS Config delivery channel?",
+      "Default": "false",
+      "AllowedValues": [
+			"false",
+			"true"
+      ]
+	}
+  },
+  "Conditions": {
+    "CreateDeliveryChannel": {
+      "Fn::Equals": [{
+        "Ref": "DeliveryChannelExists"
+      },
+        "false"
+      ]
+    }
+  },
+  "Resources": {
+    "ConfigRecorder": {
+      "Type": "AWS::Config::ConfigurationRecorder",
+      "Properties": {
+        "Name": "default",
+        "RecordingGroup": {
+          "AllSupported": false,
+          "IncludeGlobalResourceTypes": false,
+          "ResourceTypes": [
+            "AWS::EC2::Instance",
+            "AWS::RDS::DBInstance",
+            "AWS::DynamoDB::Table"
+          ]
+        },
+        "RoleARN": {
+          "Fn::GetAtt": [
+            "ConfigRoleRecorder",
+            "Arn"
+          ]
+        }
+      }
+	},
+    "DeliveryChannel": {
+      "Type": "AWS::Config::DeliveryChannel",
+      "Properties": {
+        "ConfigSnapshotDeliveryProperties": {
+          "DeliveryFrequency": "Six_Hours"
+        },
+        "S3BucketName": {
+          "Ref": "ConfigBucket"
+        },
+        "SnsTopicARN": {
+          "Ref": "ConfigTopic"
+        }
+      }
+	},
+    "AWSConfigRule": {
+      "Type": "AWS::Config::ConfigRule",
+      "Properties": {
+        "ConfigRuleName": {
+          "Ref": "ConfigRuleName"
+        },
+        "Description": "Checks whether your resources have the tags that you specify.",
+        "InputParameters": {
+          "tag1Key": {
+            "Fn::If": [
+              "tag1Key",
+              {
+                "Ref": "tag1Key"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          "tag1Value": {
+            "Fn::If": [
+              "tag1Value",
+              {
+                "Ref": "tag1Value"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        },
+        "Scope": {
+          "ComplianceResourceTypes": [
+            "AWS::EC2::Instance",
+            "AWS::RDS::DBInstance",
+            "AWS::DynamoDB::Table"
+          ]
+        },
+        "Source": {
+          "Owner": "AWS",
+          "SourceIdentifier": "REQUIRED_TAGS"
+        }
+      },
+      "DependsOn": [
+        "ConfigRecorder"
+      ]
+    },
+    "ConfigTopic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {
+        "Subscription": [{
+          "Endpoint": {
+            "Ref": "EmailAddress"
+          },
+          "Protocol": "email"
+        }]
+      }
+	},
+	"ConfigTopicPolicy": {
+      "Type": "AWS::SNS::TopicPolicy",
+      "Properties": {
+        "PolicyDocument": {
+          "Id": "ConfigTopicPolicy",
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "config.amazonaws.com"
+            },
+            "Action": "SNS:Publish",
+            "Resource": "*"
+          }]
+        },
+        "Topics": [{
+          "Ref": "ConfigTopic"
+        }]
+      }
+	},
+    "ConfigRoleRecorder": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": {
+              "Service": [
+                "config.amazonaws.com"
+              ]
+            },
+            "Action": [
+              "sts:AssumeRole"
+            ]
+          }]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSConfigRole"
+        ],
+        "Policies": [{
+          "PolicyName": "root",
+          "PolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [{
+              "Effect": "Allow",
+              "Action": "s3:GetBucketAcl",
+              "Resource": {
+                "Fn::Join": [
+                  "", [
+                    "arn:aws:s3:::",
+                    {
+                      "Ref": "ConfigBucket"
+                    }
+                  ]
+                ]
+              }
+            },
+              {
+                "Effect": "Allow",
+                "Action": "s3:PutObject",
+                "Resource": {
+                  "Fn::Join": [
+                    "", [
+                      "arn:aws:s3:::",
+                      {
+                        "Ref": "ConfigBucket"
+                      },
+                      "/AWSLogs/",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      "/*"
+                    ]
+                  ]
+                },
+                "Condition": {
+                  "StringEquals": {
+                    "s3:x-amz-acl": "bucket-owner-full-control"
+                  }
+                }
+              },
+              {
+                "Effect": "Allow",
+                "Action": "config:Put*",
+                "Resource": "*"
+              }
+            ]
+          }
+        }]
+      }
+	},
+	"ConfigBucket": {
+		"Type": "AWS::S3::Bucket"
+	}
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Label": {
+            "default": "Required"
+          },
+          "Parameters": [
+            "tag1Key"
+          ]
+        },
+        {
+          "Label": {
+            "default": "Optional"
+          },
+          "Parameters": [
+            "tag1Value"
+          ]
+        }
+      ]
+    }
+  },
+  "Conditions": {
+    "tag1Key": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            "",
+            {
+              "Ref": "tag1Key"
+            }
+          ]
+        }
+      ]
+    },
+    "tag1Value": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            "",
+            {
+              "Ref": "tag1Value"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
