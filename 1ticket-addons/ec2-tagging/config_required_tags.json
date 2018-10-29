@@ -59,7 +59,8 @@
           "ResourceTypes": [
             "AWS::EC2::Instance",
             "AWS::RDS::DBInstance",
-            "AWS::DynamoDB::Table"
+            "AWS::DynamoDB::Table",
+            "AWS::Lambda::Function"
           ]
         },
         "RoleARN": {
@@ -119,7 +120,8 @@
           "ComplianceResourceTypes": [
             "AWS::EC2::Instance",
             "AWS::RDS::DBInstance",
-            "AWS::DynamoDB::Table"
+            "AWS::DynamoDB::Table",
+            "AWS::Lambda::Function"
           ]
         },
         "Source": {
