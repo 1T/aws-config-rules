@@ -45,4 +45,4 @@ Once the rules are enabled, when a resource of the types above are created or up
   
 ## Cost
 
-[AWS Config cost](https://aws.amazon.com/config/pricing/) is determined from the number of rules and the number of configuration items.  The cost associated with rules is about 4 rules x $2 = $8 per month.  The number of configuration items is determined from the number of changes to a resource type that AWS Config is monitoring.
+[AWS Config cost](https://aws.amazon.com/config/pricing/) is determined from the number of rules and the number of configuration items.  The cost associated with rules is about 4 rules x $2 = $8 per month.  The number of configuration items is determined from the number of changes to a resource type that AWS Config is monitoring.  We are expecting a cost of less than $20 for the dtiprod account, and slightly more for a larger account such as dti1ticketprod
